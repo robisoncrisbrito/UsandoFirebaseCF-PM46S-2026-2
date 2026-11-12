@@ -200,7 +200,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
                     .addOnSuccessListener { document ->
 
                         for ( registro in document ) {
-                            saida.append("${registro.data}\n")
+                            saida.append("${registro.data.get("nome")} - ${registro.data.get("telefone")}\n")
                         }
 
                         Toast.makeText( context, saida.toString(), Toast.LENGTH_SHORT ).show()
