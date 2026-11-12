@@ -1,6 +1,7 @@
 package br.edu.utfpr.usandofirebasecf
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,9 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.edu.utfpr.usandofirebasecf.ui.theme.UsandoFirebaseCFTheme
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,12 +53,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
 
+    val context = LocalContext.current
+    val db = Firebase.firestore
+
     var codigo by remember { mutableStateOf("") }
     var nome by remember { mutableStateOf("") }
     var telefone by remember { mutableStateOf("") }
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
             .verticalScroll(rememberScrollState() ),
@@ -63,7 +70,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     ){
         Text(
             text = "Cadastro de Aluno",
-            modifier = modifier.padding(bottom = 16.dp),
+            modifier = Modifier.padding(bottom = 16.dp),
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -71,56 +78,147 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             value = codigo,
             onValueChange = { codigo = it},
             label = { Text ("Código") },
-            modifier = modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = nome,
             onValueChange = { nome = it},
             label = { Text ("Nome") },
-            modifier = modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
             value = telefone,
             onValueChange = { telefone = it},
             label = { Text ("Telefone") },
-            modifier = modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = {},
-            modifier = modifier.fillMaxWidth()
+            onClick = {
+                val cadastro = hashMapOf(
+                    "nome" to nome,
+                    "telefone" to telefone
+                )
+
+                db.collection("cadastro")
+                    .document(codigo)
+                    .set( cadastro )
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Sucesso", Toast.LENGTH_SHORT ).show()
+                    }
+                    .addOnFailureListener { e->
+                        Toast.makeText( context, "Erro: ${e.message}", Toast.LENGTH_SHORT ).show()
+                    }
+
+
+            },
+            modifier = Modifier.fillMaxWidth()
         ){
             Text( "Incluir" )
         }
 
         Button(
-            onClick = {},
-            modifier = modifier.fillMaxWidth()
+            onClick = {
+
+                val cadastro = hashMapOf(
+                    "nome" to nome,
+                    "telefone" to telefone
+                )
+
+                db.collection("cadastro")
+                    .document(codigo)
+                    .set( cadastro )
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Sucesso", Toast.LENGTH_SHORT ).show()
+                    }
+                    .addOnFailureListener { e->
+                        Toast.makeText( context, "Erro: ${e.message}", Toast.LENGTH_SHORT ).show()
+                    }
+
+
+
+
+
+            },
+            modifier = Modifier.fillMaxWidth()
         ){
             Text( "Alterar" )
         }
 
         Button(
-            onClick = {},
-            modifier = modifier.fillMaxWidth()
+            onClick = {
+                db.collection( "cadastro" )
+                    .document(codigo)
+                    .delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(context, "Sucesso", Toast.LENGTH_SHORT ).show()
+                    }
+                    .addOnFailureListener { e->
+                        Toast.makeText( context, "Erro: ${e.message}", Toast.LENGTH_SHORT ).show()
+                    }
+
+            },
+            modifier = Modifier.fillMaxWidth()
         ){
             Text( "Excluir" )
         }
 
         Button(
-            onClick = {},
-            modifier = modifier.fillMaxWidth()
+            onClick = {
+                db.collection("cadastro")
+                    .document(codigo)
+                    .get()
+                    .addOnSuccessListener { document ->
+                        if ( document.data == null ){
+                            Toast.makeText(context, "Não encontrado", Toast.LENGTH_SHORT ).show()
+                        }else{
+                            nome = document.data?.get("nome").toString()
+                            telefone = document.data?.get("telefone") as String
+                        }
+                    }
+                    .addOnFailureListener { e->
+                        Toast.makeText( context, "Erro: ${e.message}", Toast.LENGTH_SHORT ).show()
+                    }
+
+
+            },
+            modifier = Modifier.fillMaxWidth()
         ){
             Text( "Pesquisar" )
         }
 
         Button(
-            onClick = {},
-            modifier = modifier.fillMaxWidth()
+            onClick = {
+                var saida = StringBuilder()
+
+                db.collection("cadastro")
+                    .get()
+                    .addOnSuccessListener { document ->
+
+                        for ( registro in document ) {
+                            saida.append("${registro.data}\n")
+                        }
+
+                        Toast.makeText( context, saida.toString(), Toast.LENGTH_SHORT ).show()
+
+                    }
+                    .addOnFailureListener { e->
+                        Toast.makeText( context, "Erro: ${e.message}", Toast.LENGTH_SHORT ).show()
+                    }
+
+
+
+
+
+
+
+
+            },
+            modifier = Modifier.fillMaxWidth()
         ){
             Text( "Listar" )
         }
